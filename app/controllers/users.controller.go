@@ -59,18 +59,19 @@ func (ur *PropsUserController) GetUserAccount(c *fiber.Ctx) error {
 	var result models.ModuleProfile
 
 	collection := ur.MainCollectionDB
+
 	e_mail := c.Query("e_mail")
+
 	bson := bson.M{
 		"e_mail": e_mail,
 	}
 
 	err := collection.FindOne(context.Background(), bson).Decode(&result)
 	if err != nil {
-		c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
+		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
+	} else {
+		return c.JSON(models.NewBaseResponse(result, fiber.StatusOK))
 	}
-
-	return c.JSON(models.NewBaseResponse(result, fiber.StatusOK))
-
 }
 
 func (ur *PropsUserController) GetUsersAccount(c *fiber.Ctx) error {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,7 +25,8 @@ func InintMongodbAtlas() *mongo.Database {
 		log.Fatal(err)
 	}
 
-	var database = client.Database(os.Getenv("MONGODB_DBNAME"))
+	// var database = client.Database(os.Getenv("MONGODB_DBNAME"))
+	var database = client.Database("sample_system")
 	fmt.Println("Connect to Mongo Database Atlas.")
 
 	return database

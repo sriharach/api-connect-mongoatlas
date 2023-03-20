@@ -6,15 +6,15 @@ type SignInInput struct {
 }
 
 type AuthToken struct {
-	Access_token string `json:"access_token"`
-	// Refresh_token string `json:"refresh_token"`
+	Access_token  string `json:"access_token"`
+	Refresh_token string `json:"refresh_token"`
 }
 
 type ModuleProfile struct {
 	// ID         uuid.UUID `json:"id"`
 	User_name  string `json:"user_name"`
 	E_mail     string `json:"e_mail"`
-	Password   string `json:"password"`
+	Password   string `json:"-"`
 	First_name string `json:"first_name"`
 	Last_name  string `json:"last_name"`
 	Activate   uint8  `json:"activate"`
