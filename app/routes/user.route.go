@@ -2,6 +2,7 @@ package routes
 
 import (
 	"api-connect-mongodb-atlas/app/controllers"
+	"api-connect-mongodb-atlas/pkg/middleware"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,8 +22,7 @@ func NewUserRoute(ac controllers.IuserController) IUserRoute {
 }
 
 func (ct *UserRouteTool) UserPropsRoute(a *fiber.App) {
-	group := a.Group("/api/v1")
-	group.Post("/register", ct.UserInterface.RegisterAccount)
+	group := a.Group("/api/v1", middleware.DeserializeUser)
 	group.Get("/user/profile", ct.UserInterface.GetUserAccount)
 	group.Get("/users", ct.UserInterface.GetUsersAccount)
 }

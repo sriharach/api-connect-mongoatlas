@@ -4,11 +4,15 @@ go 1.19
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
+	github.com/gofiber/adaptor/v2 v2.1.32
 	github.com/gofiber/fiber/v2 v2.42.0 // indirect
 	github.com/gofiber/helmet/v2 v2.2.24 // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
+	github.com/gomodule/redigo v1.8.4 // indirect
 	github.com/google/uuid v1.3.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/kr/fs v0.1.0 // indirect
@@ -24,7 +28,6 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/savsgio/dictpool v0.0.0-20221023140959-7bf2e61cea94 // indirect
 	github.com/savsgio/gotils v0.0.0-20220530130905-52f3993e8d6d // indirect
-	github.com/tbxark/g4vercel v0.0.4
 	github.com/tinylib/msgp v1.1.6 // indirect
 	github.com/tools/godep v0.0.0-20180126220526-ce0bfadeb516 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

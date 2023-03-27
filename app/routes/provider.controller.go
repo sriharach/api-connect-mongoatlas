@@ -11,16 +11,18 @@ type IProviderRoute interface {
 }
 
 type ProviderRouteTool struct {
-	UserInterface controllers.IProviders
+	ProviderInterface controllers.IProviders
 }
 
 func NewProviderRoute(ac controllers.IProviders) IProviderRoute {
 	return &ProviderRouteTool{
-		UserInterface: ac,
+		ProviderInterface: ac,
 	}
 }
 
 func (pr *ProviderRouteTool) ProviderPropsRoute(a *fiber.App) {
 	group := a.Group("/api")
-	group.Post("/login", pr.UserInterface.Login)
+	group.Post("/register", pr.ProviderInterface.RegisterAccount)
+	group.Post("/login", pr.ProviderInterface.Login)
+	group.Get("/logout", pr.ProviderInterface.Logout)
 }

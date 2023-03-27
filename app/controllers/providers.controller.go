@@ -4,16 +4,21 @@ import (
 	"api-connect-mongodb-atlas/pkg/models"
 	"api-connect-mongodb-atlas/pkg/utils"
 	"context"
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type IProviders interface {
 	Login(c *fiber.Ctx) error
+	RegisterAccount(c *fiber.Ctx) error
+	Logout(c *fiber.Ctx) error
 }
 
 type PropsProviderController struct {
@@ -28,6 +33,30 @@ func NewProviderControllers(DB *mongo.Database) IProviders {
 	}
 }
 
+func (ur *PropsProviderController) RegisterAccount(c *fiber.Ctx) error {
+	requestUser := new(models.ModuleProfile)
+	collection := ur.MainCollectionDB
+
+	// parse the request body and bind it to the user instance
+	if err := c.BodyParser(&requestUser); err != nil {
+		fmt.Println(err)
+		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
+	}
+
+	hashPassword, _ := utils.HashPassword(requestUser.Password)
+	requestUser.Is_online = false
+	requestUser.Password = hashPassword
+	requestUser.ID = primitive.NewObjectID()
+
+	res, err := collection.InsertOne(context.Background(), requestUser)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
+	}
+	id := res.InsertedID
+
+	return c.JSON(models.NewBaseResponse(id, fiber.StatusOK))
+}
+
 func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 	var result *models.ModuleProfile
 	payload := new(models.SignInInput)
@@ -36,10 +65,11 @@ func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 	if err := c.BodyParser(payload); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
 	}
-	bson := bson.M{
+	e_mail := bson.M{
 		"e_mail": payload.E_mail,
 	}
-	err := collection.FindOne(context.Background(), bson).Decode(&result)
+
+	err := collection.FindOne(context.Background(), e_mail).Decode(&result)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusNotFound))
 	}
@@ -47,6 +77,16 @@ func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 	if is_passwor_hash := utils.CheckPasswordHash(payload.Password, result.Password); !is_passwor_hash {
 		return c.Status(fiber.StatusNotAcceptable).JSON(models.NewBaseErrorResponse("Password don't matching", fiber.StatusNotAcceptable))
 	}
+
+	id, _ := primitive.ObjectIDFromHex(c.Cookies("user_id"))
+	filter := bson.D{{"_id", id}}
+	update := bson.D{{"$set", bson.D{{"is_online", true}}}}
+
+	updated, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse("Matched %v documents and modified %v documents.\n", fiber.StatusBadRequest))
+	}
+	fmt.Printf("Matched %v documents and modified %v documents.\n", updated.MatchedCount, updated.ModifiedCount)
 
 	access_token, _ := utils.GenerateTokenJWT(result, true)
 	refresh_token, _ := utils.GenerateTokenJWT(result, false)
@@ -62,6 +102,21 @@ func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 
 	claims := token.Claims.(*utils.PayloadsClaims)
 
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    access_token,
+		Path:     "/",
+		Expires:  time.Now().Add(20 * time.Minute),
+		HTTPOnly: true,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:     "user_id",
+		Value:    result.ID.Hex(),
+		Path:     "/",
+		Expires:  time.Now().Add(20 * time.Minute),
+		HTTPOnly: true,
+	})
+
 	return c.JSON(models.NewBaseResponse(utils.GenerateJWTOption{
 		Access_token:  access_token,
 		Refresh_token: refresh_token,
@@ -70,4 +125,46 @@ func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 			IssuedAt:  claims.IssuedAt,
 		},
 	}, fiber.StatusOK))
+}
+
+func (pv *PropsProviderController) Logout(c *fiber.Ctx) error {
+	collection := pv.MainCollectionDB
+	access_token := c.Cookies("access_token")
+	fmt.Println(access_token)
+	if access_token == "" {
+		return c.Status(fiber.StatusNotFound).JSON(models.NewBaseErrorResponse("Not found access_token.", fiber.StatusNotFound))
+	}
+
+	id, _ := primitive.ObjectIDFromHex(c.Cookies("user_id"))
+	filter := bson.D{{"_id", id}}
+	update := bson.D{{"$set", bson.D{{"is_online", false}}}}
+
+	updated, err := collection.UpdateOne(context.Background(), filter, update)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
+	}
+	c.Cookie(&fiber.Cookie{
+		Name: "cookie",
+
+		Expires:  time.Now().Add(-(time.Hour * 2)),
+		HTTPOnly: true,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name: "access_token",
+		// Value:    access_token,
+		Path:     "/",
+		Expires:  time.Now().Add(-(time.Hour * 2)),
+		HTTPOnly: true,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name: "user_id",
+		// Value:    result.ID.Hex(),
+		Path:     "/",
+		Expires:  time.Now().Add(-(time.Hour * 2)),
+		HTTPOnly: true,
+	})
+
+	fmt.Printf("Matched %v documents and modified %v documents.\n", updated.MatchedCount, updated.ModifiedCount)
+
+	return c.SendStatus(200)
 }

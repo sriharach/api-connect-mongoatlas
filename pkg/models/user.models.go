@@ -1,8 +1,10 @@
 package models
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type SignInInput struct {
-	E_mail   string `json:"e_mail"  binding:"required"`
-	Password string `json:"password"  binding:"required"`
+	E_mail   string `json:"e_mail" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type AuthToken struct {
@@ -12,14 +14,16 @@ type AuthToken struct {
 
 type ModuleProfile struct {
 	// ID         uuid.UUID `json:"id"`
-	User_name  string `json:"user_name"`
-	E_mail     string `json:"e_mail"`
-	Password   string `json:"-"`
-	First_name string `json:"first_name"`
-	Last_name  string `json:"last_name"`
-	Activate   uint8  `json:"activate"`
-	Picture    string `json:"picture"`
-	Is_oauth   bool   `json:"is_oauth"`
+	ID         primitive.ObjectID `bson:"_id" json:"_id"`
+	User_name  string             `json:"user_name"`
+	E_mail     string             `json:"e_mail"`
+	Password   string             `json:"password"`
+	First_name string             `json:"first_name"`
+	Last_name  string             `json:"last_name"`
+	Activate   uint8              `json:"activate"`
+	Is_online  bool               `json:"is_online"`
+	Picture    string             `json:"-"`
+	Is_oauth   bool               `json:"-"`
 }
 
 type ModuleProfileOauth struct {

@@ -6,10 +6,17 @@ import (
 	"api-connect-mongodb-atlas/pkg/configs"
 	"api-connect-mongodb-atlas/pkg/middleware"
 	"api-connect-mongodb-atlas/pkg/utils"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
+
+// Easier to get running with CORS. Thanks for help @Vindexus and @erkie
+var allowOriginFunc = func(r *http.Request) bool {
+	return true
+}
 
 func main() {
 
@@ -23,22 +30,29 @@ func main() {
 	mongoAtlas := configs.InintMongodbAtlas()
 
 	var (
-		analyticsController = controllers.NewAnalyticsController(mongoAtlas)
-		userController      = controllers.NewUserControllers(mongoAtlas)
-		providerController  = controllers.NewProviderControllers(mongoAtlas)
+		userController     = controllers.NewUserControllers(mongoAtlas)
+		providerController = controllers.NewProviderControllers(mongoAtlas)
 
-		analyticsRoute = routes.NewAnalyticsRoute(analyticsController)
-		userRoute      = routes.NewUserRoute(userController)
-		providerRoute  = routes.NewProviderRoute(providerController)
+		userRoute     = routes.NewUserRoute(userController)
+		providerRoute = routes.NewProviderRoute(providerController)
 	)
 
-	analyticsRoute.AnalyticsList(app)
 	userRoute.UserPropsRoute(app)
 	providerRoute.ProviderPropsRoute(app)
 
 	app.Get("/version", controllers.TestConnect)
 
-	// Start server (with or without graceful shutdown).
+	app.Post("/cookie", func(c *fiber.Ctx) error {
+		c.Cookie(&fiber.Cookie{
+			Name:     "cookie",
+			Value:    "cookie",
+			Expires:  time.Now().Add(24 * time.Hour),
+			HTTPOnly: true,
+			SameSite: "lax",
+		})
+		return nil
+	})
+
 	if os.Getenv("STAGE_STATUS") == "dev" {
 		utils.StartServer(app)
 	} else {
