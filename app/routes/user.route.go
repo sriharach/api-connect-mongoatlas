@@ -25,4 +25,6 @@ func (ct *UserRouteTool) UserPropsRoute(a *fiber.App) {
 	group := a.Group("/api/v1", middleware.DeserializeUser)
 	group.Get("/user/profile", ct.UserInterface.GetUserAccount)
 	group.Get("/users", ct.UserInterface.GetUsersAccount)
+	group.Put("/user/update/:_id", ct.UserInterface.EditUserAccount)
+	group.Delete("/user/remove/:_id", ct.UserInterface.DeleteUserAccount)
 }

@@ -54,7 +54,7 @@ func (ur *PropsProviderController) RegisterAccount(c *fiber.Ctx) error {
 	}
 	id := res.InsertedID
 
-	return c.JSON(models.NewBaseResponse(id, fiber.StatusOK))
+	return c.Status(fiber.StatusCreated).JSON(models.NewBaseResponse(id, fiber.StatusCreated))
 }
 
 func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
@@ -144,21 +144,18 @@ func (pv *PropsProviderController) Logout(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
 	}
 	c.Cookie(&fiber.Cookie{
-		Name: "cookie",
-
+		Name:     "cookie",
 		Expires:  time.Now().Add(-(time.Hour * 2)),
 		HTTPOnly: true,
 	})
 	c.Cookie(&fiber.Cookie{
-		Name: "access_token",
-		// Value:    access_token,
+		Name:     "access_token",
 		Path:     "/",
 		Expires:  time.Now().Add(-(time.Hour * 2)),
 		HTTPOnly: true,
 	})
 	c.Cookie(&fiber.Cookie{
-		Name: "user_id",
-		// Value:    result.ID.Hex(),
+		Name:     "user_id",
 		Path:     "/",
 		Expires:  time.Now().Add(-(time.Hour * 2)),
 		HTTPOnly: true,
