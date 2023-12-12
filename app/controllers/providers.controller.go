@@ -46,10 +46,12 @@ func (ur *PropsProviderController) RegisterAccount(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
 	}
 
-	hashPassword, _ := utils.HashPassword(requestUser.Password)
-	requestUser.Is_online = false
-	requestUser.Password = hashPassword
+	hashPassword, _ := utils.HashPassword(*requestUser.Password)
+	requestUser.Password = &hashPassword
 	requestUser.ID = primitive.NewObjectID()
+	requestUser.Picture = nil
+	requestUser.Created_at = time.Now()
+	requestUser.Updated_at = time.Now()
 
 	_, err := collection.InsertOne(context.Background(), requestUser)
 	if err != nil {
@@ -76,7 +78,7 @@ func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusNotFound))
 	}
 
-	if is_passwor_hash := utils.CheckPasswordHash(payload.Password, result.Password); !is_passwor_hash {
+	if is_passwor_hash := utils.CheckPasswordHash(payload.Password, *result.Password); !is_passwor_hash {
 		return c.Status(fiber.StatusNotAcceptable).JSON(models.NewBaseErrorResponse("Password don't matching", fiber.StatusNotAcceptable))
 	}
 

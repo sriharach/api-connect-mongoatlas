@@ -1,6 +1,10 @@
 package models
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type SignInInput struct {
 	E_mail   string `json:"e_mail" validate:"required"`
@@ -17,13 +21,14 @@ type ModuleProfile struct {
 	ID         primitive.ObjectID `bson:"_id" json:"_id"`
 	User_name  string             `json:"user_name"`
 	E_mail     string             `json:"e_mail"`
-	Password   string             `json:"password"`
-	First_name string             `json:"first_name"`
-	Last_name  string             `json:"last_name"`
+	Password   *string            `json:"-"`
+	First_name *string            `json:"first_name"`
+	Last_name  *string            `json:"last_name"`
 	Activate   uint8              `json:"activate"`
-	Is_online  bool               `json:"is_online"`
-	Picture    string             `json:"-"`
+	Picture    *string            `json:"picture"`
 	Is_oauth   bool               `json:"-"`
+	Created_at time.Time          `json:"created_at"`
+	Updated_at time.Time          `json:"updated_at"`
 }
 
 type ModuleProfileOauth struct {
