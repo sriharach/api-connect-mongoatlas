@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"api-connect-mongodb-atlas/internal"
 	"api-connect-mongodb-atlas/pkg/models"
 	"api-connect-mongodb-atlas/pkg/utils"
 	"context"
@@ -17,6 +18,8 @@ import (
 
 type IProviders interface {
 	Login(c *fiber.Ctx) error
+	Oauth2(c *fiber.Ctx) error
+	OauthCallback(c *fiber.Ctx) error
 	RegisterAccount(c *fiber.Ctx) error
 	Logout(c *fiber.Ctx) error
 }
@@ -48,13 +51,12 @@ func (ur *PropsProviderController) RegisterAccount(c *fiber.Ctx) error {
 	requestUser.Password = hashPassword
 	requestUser.ID = primitive.NewObjectID()
 
-	res, err := collection.InsertOne(context.Background(), requestUser)
+	_, err := collection.InsertOne(context.Background(), requestUser)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(models.NewBaseErrorResponse(err.Error(), fiber.StatusBadRequest))
 	}
-	id := res.InsertedID
 
-	return c.Status(fiber.StatusCreated).JSON(models.NewBaseResponse(id, fiber.StatusCreated))
+	return c.Status(fiber.StatusCreated).JSON(models.NewBaseResponse(requestUser, fiber.StatusCreated))
 }
 
 func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
@@ -125,6 +127,17 @@ func (pv *PropsProviderController) Login(c *fiber.Ctx) error {
 			IssuedAt:  claims.IssuedAt,
 		},
 	}, fiber.StatusOK))
+}
+
+func (pv *PropsProviderController) Oauth2(c *fiber.Ctx) error {
+	confixOauth := internal.Oauth()
+	url := confixOauth.AuthCodeURL("")
+
+	return c.JSON(models.NewBaseResponse(url, fiber.StatusOK))
+}
+
+func (pv *PropsProviderController) OauthCallback(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{})
 }
 
 func (pv *PropsProviderController) Logout(c *fiber.Ctx) error {

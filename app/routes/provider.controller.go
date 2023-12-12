@@ -24,5 +24,7 @@ func (pr *ProviderRouteTool) ProviderPropsRoute(a *fiber.App) {
 	group := a.Group("/api")
 	group.Post("/register", pr.ProviderInterface.RegisterAccount)
 	group.Post("/login", pr.ProviderInterface.Login)
+	group.Get("/login/oauth", pr.ProviderInterface.Oauth2)
+	group.Get("/oauth/callback", pr.ProviderInterface.OauthCallback)
 	group.Get("/logout", pr.ProviderInterface.Logout)
 }
